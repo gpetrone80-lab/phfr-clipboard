@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Roll Call</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base styles */
+        body { 
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+        }
+
+        /* PRINT SPECIFIC STYLES */
+        @media print {
+            @page {
+                margin: 0.4in;
+                size: portrait;
+            }
+            body {
+                background-color: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-size: 13px;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .main-container {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            section {
+                margin-bottom: 1rem !important;
+                break-inside: avoid;
+            }
+            /* Hidden elements during print (like original inputs we swap out) */
+            .print-hidden {
+                display: none !important;
+            }
+            /* The text spans we create for printing */
+            .print-text-display {
+                display: inline-block;
+                width: 100%;
+                border-bottom: 1px solid #ccc; /* Underline for roster style */
+                min-height: 1.2em;
+                word-wrap: break-word; /* Allow wrapping */
+            }
+            
+            /* Textareas still use the auto-expand logic */
+            textarea {
+                border: 1px solid #6b7280 !important;
+                padding: 5px !important;
+                overflow: hidden !important;
+                resize: none !important;
+                display: block !important;
+            }
+
+            /* Headers and Labels */
+            h1 { font-size: 1.8rem !important; color: black !important; margin-bottom: 0px; }
+            h2 { 
+                font-size: 1.1rem !important; 
+                color: black !important; 
+                border-bottom: 2px solid black !important; 
+                margin-bottom: 0.5rem !important; 
+                font-weight: 800 !important;
+            }
+            label { 
+                color: black !important; 
+                font-size: 0.75rem !important; 
+                font-weight: 700 !important;
+                text-transform: uppercase;
+                margin-bottom: 2px !important;
+            }
+            
+            /* Grids */
+            .print-grid-2 {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .print-grid-5 {
+                display: grid !important;
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+            
+            /* Roster specific styling */
+            .roster-box { border: 1px solid #6b7280 !important; }
+            .roster-header {
+                background-color: #e5e7eb !important;
+                border-bottom: 1px solid #6b7280 !important;
+                font-weight: bold !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="main-container max-w-5xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+        
+        <!-- Header -->
+        <div class="bg-slate-800 text-white p-4 flex justify-between items-center print:bg-white print:text-black print:border-b-2 print:border-black print:p-0 print:pb-2 print:mb-4">
+            <div class="flex items-center">
+                <!-- Ensure 'PHFR logo.png' is in the same folder -->
+                <img src="PHFR logo.png" alt="Logo" class="h-16 w-auto mr-4 object-contain bg-white rounded p-1 print:h-14 print:p-0">
+                <div>
+                    <h1 class="text-2xl font-bold uppercase tracking-wide leading-tight">Morning Roll Call</h1>
+                    <p class="text-slate-300 text-sm print:text-gray-600 print:text-xs">Daily Station Report</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="flex flex-col items-end gap-1">
+                    <label class="text-xs font-semibold uppercase text-slate-400 print:text-black">Date</label>
+                    <input type="date" class="bg-slate-700 text-white border border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400 print:hidden">
+                    <!-- Date placeholder for print -->
+                    <span id="printDateDisplay" class="hidden print:block font-bold text-lg"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-4 print:p-0">
+
+            <!-- Section 1: Staffing Issues -->
+            <section>
+                <h2 class="text-sm font-bold text-slate-800 border-b-2 border-slate-800 mb-2 pb-1 uppercase">Staffing Issues</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-300 text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700">
+                                <th class="border border-gray-300 px-2 py-2 w-1/3 text-left">TODAY</th>
+                                <th class="border border-gray-300 px-2 py-2 w-1/3 text-left">TOMORROW</th>
+                                <th class="border border-gray-300 px-2 py-2 w-1/3 text-left">NEXT SHIFT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 p-1 align-top">
+                                    <textarea class="auto-expand w-full h-16 p-1 border border-gray-200 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Issues today..."></textarea>
+                                </td>
+                                <td class="border border-gray-300 p-1 align-top">
+                                    <textarea class="auto-expand w-full h-16 p-1 border border-gray-200 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Issues tomorrow..."></textarea>
+                                </td>
+                                <td class="border border-gray-300 p-1 align-top">
+                                    <textarea class="auto-expand w-full h-16 p-1 border border-gray-200 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Issues next shift..."></textarea>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Section 2: Daily Log / Pass Down -->
+            <section class="print-grid-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Left Column -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Pass Down</label>
+                        <textarea class="auto-expand w-full h-24 p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Notes from previous shift..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Pertinent E-mails / Memos</label>
+                        <textarea class="auto-expand w-full h-24 p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Important communications..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Daily Duties</label>
+                            <select id="dutySelect" class="no-print text-xs border border-gray-300 rounded p-1 bg-gray-50 max-w-[60%]">
+                                <option value="">- Auto-Fill Duty -</option>
+                                <option value="monday">Monday (Standard)</option>
+                                <option value="monday_1st">Monday (1st)</option>
+                                <option value="tuesday">Tuesday (Standard)</option>
+                                <option value="tuesday_2nd">Tuesday (2nd)</option>
+                                <option value="wednesday">Wednesday (Standard)</option>
+                                <option value="wednesday_3rd">Wednesday (3rd)</option>
+                                <option value="thursday">Thursday (Standard)</option>
+                                <option value="thursday_1st">Thursday (1st)</option>
+                                <option value="friday">Friday</option>
+                                <option value="saturday">Saturday</option>
+                                <option value="first_day">1st Day of Month</option>
+                            </select>
+                        </div>
+                        <textarea id="dutyText" class="auto-expand w-full h-24 p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Select a duty or type here..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Training / Events / Calendar</label>
+                        <textarea class="auto-expand w-full h-24 p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Scheduled training..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Money Section -->
+            <section class="bg-blue-50 p-3 rounded border border-blue-100 print:bg-white print:border print:border-gray-400 print:p-2">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-blue-800 uppercase print:text-black whitespace-nowrap">Breakfast / Dinner Money:</label>
+                    <!-- Changed to regular input, processed by JS for print -->
+                    <input type="text" class="printable-input w-full bg-white border-b border-blue-200 text-sm focus:outline-none">
+                </div>
+            </section>
+
+            <!-- Section 3: Unit Roster -->
+            <section>
+                <h2 class="text-sm font-bold text-slate-800 border-b-2 border-slate-800 mb-2 pb-1 uppercase">Unit Assignments / Roster</h2>
+                
+                <div class="print-grid-5 grid grid-cols-1 lg:grid-cols-5 gap-3">
+                    
+                    <!-- E65 -->
+                    <div class="roster-box border border-gray-300 rounded overflow-hidden">
+                        <div class="roster-header bg-slate-200 px-2 py-1 font-bold text-center border-b border-gray-300 text-xs">E65</div>
+                        <div class="p-2 space-y-1 bg-white">
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">LT</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">DE</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">PM</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">FF</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                        </div>
+                    </div>
+
+                    <!-- S65 -->
+                    <div class="roster-box border border-gray-300 rounded overflow-hidden">
+                        <div class="roster-header bg-slate-200 px-2 py-1 font-bold text-center border-b border-gray-300 text-xs">S65</div>
+                        <div class="p-2 space-y-1 bg-white">
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">LT</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">DE</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">PM</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                        </div>
+                    </div>
+
+                    <!-- R65 -->
+                    <div class="roster-box border border-gray-300 rounded overflow-hidden">
+                        <div class="roster-header bg-slate-200 px-2 py-1 font-bold text-center border-b border-gray-300 text-xs">R65</div>
+                        <div class="p-2 space-y-1 bg-white">
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">DE</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">PM</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                        </div>
+                    </div>
+
+                    <!-- D65 -->
+                    <div class="roster-box border border-gray-300 rounded overflow-hidden">
+                        <div class="roster-header bg-slate-200 px-2 py-1 font-bold text-center border-b border-gray-300 text-xs">D65</div>
+                        <div class="p-2 space-y-1 bg-white">
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">DC</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                            <div class="flex items-center"><span class="w-6 font-bold text-gray-500 text-[10px] print:text-black">AID</span><input type="text" class="printable-input flex-1 ml-1 border-b border-gray-200 text-xs h-6"></div>
+                        </div>
+                    </div>
+
+                     <!-- LR65 & Others -->
+                     <div class="roster-box border border-gray-300 rounded overflow-hidden">
+                        <div class="roster-header bg-slate-200 px-2 py-1 font-bold text-center border-b border-gray-300 text-xs">LR65 / Other</div>
+                        <div class="p-2 space-y-2 bg-white">
+                             <div class="flex flex-col">
+                                <span class="font-bold text-gray-500 text-[10px] print:text-black">LR65</span>
+                                <input type="text" class="printable-input border-b border-gray-200 text-xs h-6">
+                            </div>
+                            <div>
+                                <span class="font-bold text-gray-500 text-[10px] block mb-1 print:text-black">STUDENT/CADET</span>
+                                <textarea class="auto-expand w-full border border-gray-300 rounded p-1 text-xs h-12 resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer / Controls -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3 no-print">
+            <button onclick="handlePrint()" class="bg-slate-800 text-white px-4 py-2 rounded hover:bg-slate-700 transition flex items-center gap-2 text-sm font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print / Save PDF
+            </button>
+            <button onclick="document.location.reload()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition text-sm">
+                Clear
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set Date
+            const dateInput = document.querySelector('input[type="date"]');
+            if(dateInput) dateInput.valueAsDate = new Date();
+
+            // Daily Duties Logic
+            const dutySelect = document.getElementById('dutySelect');
+            const dutyText = document.getElementById('dutyText');
+
+            const duties = {
+                "monday": "Weekly apparatus checks",
+                "monday_1st": "Weekly apparatus checks\n+ Gas Meters, vehicle interiors, dip fuel tanks and log in electronic fuel log",
+                "tuesday": "Clean common bathrooms, Vacuum all hallways/rooms",
+                "tuesday_2nd": "Clean common bathrooms, Vacuum all hallways/rooms\n+ Deep clean EMS gear",
+                "wednesday": "Clean bays, adjacent rooms and garbage; Place EMS Order",
+                "wednesday_3rd": "Clean bays, adjacent rooms and garbage; Place EMS Order\n+ Check expired drugs: Bags, Apparatus, Supply room",
+                "thursday": "Clean Stairwells and 911 printer area",
+                "thursday_1st": "Clean Stairwells and 911 printer area\n+ Complete station inspection",
+                "friday": "Empty Shredder, Wash Rescue vests as needed, Drive spare apparatus, and check salt level in water softener",
+                "saturday": "Air Pack/ RIG Bag (change Batteries: January/ July)",
+                "first_day": "Calibrate the Glucometer"
+            };
+
+            if(dutySelect && dutyText) {
+                dutySelect.addEventListener('change', (e) => {
+                    const selected = e.target.value;
+                    if(duties[selected]) {
+                        dutyText.value = duties[selected];
+                    }
+                });
+            }
+        });
+
+        // Smart Print Logic
+        function handlePrint() {
+            // 1. Expand Textareas
+            const textareas = document.querySelectorAll('.auto-expand');
+            textareas.forEach(ta => {
+                ta.style.height = 'auto'; 
+                ta.style.height = (ta.scrollHeight + 5) + 'px'; 
+            });
+
+            // 2. Convert Inputs to Spans (so text doesn't get cut off)
+            const inputs = document.querySelectorAll('.printable-input');
+            const createdSpans = [];
+
+            inputs.forEach(input => {
+                const span = document.createElement('span');
+                span.textContent = input.value;
+                span.className = 'print-text-display ' + input.className; // Copy classes for style
+                
+                // Styling specifically for the print span
+                span.style.border = 'none';
+                span.style.borderBottom = '1px solid #6b7280';
+                span.style.padding = '2px';
+                
+                // Hide input, show span
+                input.classList.add('print-hidden');
+                input.parentNode.insertBefore(span, input.nextSibling);
+                createdSpans.push({span: span, input: input});
+            });
+
+            // 3. Handle Date Display
+            const dateInput = document.querySelector('input[type="date"]');
+            const dateDisplay = document.getElementById('printDateDisplay');
+            if (dateInput && dateDisplay) {
+                dateDisplay.textContent = dateInput.value; // Or format nicely
+            }
+
+            // Print
+            window.print();
+
+            // 4. Cleanup (Restore everything after print dialog closes)
+            // Note: window.print() is blocking in many browsers, but we use a timeout to be safe
+            setTimeout(() => {
+                createdSpans.forEach(item => {
+                    item.span.remove();
+                    item.input.classList.remove('print-hidden');
+                });
+            }, 500);
+
+            // Also listen for afterprint event for browsers that support it
+            window.addEventListener('afterprint', () => {
+                createdSpans.forEach(item => {
+                    if(item.span.parentNode) item.span.remove();
+                    item.input.classList.remove('print-hidden');
+                });
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>
