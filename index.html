@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHFR Officer Clipboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @media print {
+            @page { margin: 0.5in; size: auto; }
+            body { -webkit-print-color-adjust: exact; background-color: white !important; }
+            .no-print { display: none !important; }
+            iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+            .print-container { width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; }
+            input, textarea { border: none !important; border-bottom: 1px solid black !important; background: transparent !important; padding: 0 !important; margin: 0 !important; resize: none !important; }
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            /* Specific fix for tables in print */
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid black !important; }
+        }
+        .pdf-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .pdf-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .pdf-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .pdf-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .form-input { 
+            background-color: rgba(241, 245, 249, 0.5); 
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            background-color: white;
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // --- Icons ---
+        const IconBase = ({ children, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+                {children}
+            </svg>
+        );
+
+        const ClipboardCheck = (props) => <IconBase {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></IconBase>;
+        const Flame = (props) => <IconBase {...props}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></IconBase>;
+        const MapIcon = (props) => <IconBase {...props}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" x2="8" y1="2" y2="18"/><line x1="16" x2="16" y1="6" y2="22"/></IconBase>;
+        const ShieldAlert = (props) => <IconBase {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>;
+        const Wind = (props) => <IconBase {...props}><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></IconBase>;
+        const BellRing = (props) => <IconBase {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M4 2C2.8 2.2 2 3 2 4c0 1.1.9 2 2 2"/><path d="M22 4c0-1.1-.9-2-2-2a2 2 0 0 0-2 2"/></IconBase>;
+        const Printer = (props) => <IconBase {...props}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></IconBase>;
+        const Menu = (props) => <IconBase {...props}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></IconBase>;
+        const X = (props) => <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>;
+        const HeartPulse = (props) => <IconBase {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><polyline points="3.22 12 14 12 14 2 24 2"/></IconBase>;
+        const UserPlus = (props) => <IconBase {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" x2="20" y1="8" y2="14"/><line x1="23" x2="17" y1="11" y2="11"/></IconBase>;
+        const FileWarning = (props) => <IconBase {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconBase>;
+        const Users = (props) => <IconBase {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
+        const AlertTriangle = (props) => <IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconBase>;
+        const Droplets = (props) => <IconBase {...props}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 10a4.5 4.5 0 0 1 1.11 3.05c0 2.22-1.8 4.05-4 4.05"/><path d="M17 21.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S17.29 11.75 17 10.3c-.29 1.45-1.14 2.84-2.29 3.76S13 16.1 13 17.25c0 2.22 1.8 4.05 4 4.05z"/></IconBase>;
+        const ChevronDown = (props) => <IconBase {...props}><path d="m6 9 6 6 6-6"/></IconBase>;
+        const ChevronRight = (props) => <IconBase {...props}><path d="m9 18 6-6-6-6"/></IconBase>;
+        const LayoutDashboard = (props) => <IconBase {...props}><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></IconBase>;
+        const Search = (props) => <IconBase {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></IconBase>;
+        const ArrowRight = (props) => <IconBase {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></IconBase>;
+        const FileText = (props) => <IconBase {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></IconBase>;
+        const PenTool = (props) => <IconBase {...props}><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></IconBase>;
+        const Download = (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
+        const FileIcon = (props) => <IconBase {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></IconBase>;
+        const Eye = (props) => <IconBase {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></IconBase>;
+        const Edit = (props) => <IconBase {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></IconBase>;
+
+        // --- Reusable Form Components ---
+        const PrintInput = ({ className = "", ...props }) => (
+            <input 
+                className={`bg-transparent border-b border-black text-black outline-none w-full ${className} print:border-none print:placeholder-transparent form-input px-1`}
+                {...props}
+            />
+        );
+
+        const PrintTextArea = ({ className = "", rows = 4, ...props }) => (
+            <textarea 
+                rows={rows}
+                className={`bg-transparent border border-gray-300 p-2 text-black w-full resize-none outline-none ${className} print:border-none print:p-0 print:resize-none form-input`}
+                {...props}
+            />
+        );
+
+        // --- Specific Forms (Digital Twins) ---
+
+        const WitnessStatementForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="flex justify-between items-end mb-4 border-b-2 border-black pb-2">
+                    <div className="w-1/3">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold">Date:</span>
+                            <PrintInput className="flex-1" type="date" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold">Inc. #:</span>
+                            <PrintInput className="flex-1" placeholder="Enter Incident #" />
+                        </div>
+                    </div>
+                    <div className="text-center w-1/3">
+                        <h1 className="text-xl font-bold uppercase whitespace-nowrap">Palm Harbor Fire Rescue</h1>
+                        <h2 className="text-lg font-bold">Witness / Statement</h2>
+                    </div>
+                    <div className="w-1/3 text-right text-xs">Page 1 of 1</div> 
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold w-12">Time:</span>
+                        <PrintInput type="time" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Location at time of statement:</span>
+                        <PrintInput placeholder="Address/Location" />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold w-12">Name:</span>
+                        <PrintInput placeholder="Witness Name" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold w-16">D.O.B.:</span>
+                        <PrintInput placeholder="MM/DD/YYYY" />
+                    </div>
+
+                    <div className="col-span-2 flex items-center gap-2">
+                        <span className="font-bold w-12">Address:</span>
+                        <PrintInput placeholder="250 West Lake Road..." />
+                    </div>
+                    
+                    <div className="col-span-2 flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Contact #:</span>
+                        <PrintInput defaultValue="727-784-0454" />
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <h3 className="font-bold underline mb-2">Witnesses / Statements:</h3>
+                    <div className="border border-black min-h-[500px] p-4 print:border-black relative" style={{ backgroundImage: 'linear-gradient(transparent, transparent 27px, #000000 28px)', backgroundSize: '100% 28px', lineHeight: '28px' }}>
+                        <textarea className="w-full h-full bg-transparent border-none resize-none outline-none leading-[28px]" placeholder="Type statement here..." />
+                    </div>
+                </div>
+
+                <div className="flex justify-between items-end mt-12 pt-4">
+                    <div className="flex items-center gap-2 w-1/2">
+                        <span className="font-bold">Statement By:</span>
+                        <PrintInput className="border-b border-black" placeholder="Signature/Name" />
+                    </div>
+                    <div className="flex items-center gap-2 w-1/3">
+                        <span className="font-bold">Date:</span>
+                        <PrintInput type="date" className="border-b border-black" />
+                    </div>
+                </div>
+            </div>
+        );
+
+        const FieldInfoForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
+                    <div className="text-sm w-1/3">
+                        <div className="flex gap-2 mb-1"><span className="font-bold">Date:</span> <PrintInput type="date" className="w-32" /></div>
+                        <div className="flex gap-2"><span className="font-bold">Inc. #:</span> <PrintInput className="w-32" placeholder="Incident #" /></div>
+                    </div>
+                    <h1 className="text-xl font-bold uppercase text-center mx-4 w-1/3">Palm Harbor Fire Rescue<br/><span className="text-lg">Fire – Field Info Report</span></h1>
+                    <div className="w-1/3"></div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
+                    <div className="flex gap-2"><span className="font-bold">Time Of Call:</span> <PrintInput type="time" /></div>
+                    <div className="flex gap-2"><span className="font-bold">On Scene:</span> <PrintInput type="time" /></div>
+                    <div className="flex gap-2"><span className="font-bold">First on Scene:</span> <PrintInput placeholder="Unit/Person" /></div>
+                </div>
+
+                <div className="flex justify-center gap-6 mb-6 py-2 border-y border-black bg-gray-50 print:bg-transparent">
+                    {['Structure Fire', 'Vehicle / Conveyance', 'Brush / Grass', 'Miscellaneous'].map(type => (
+                        <label key={type} className="flex items-center gap-2 text-sm font-bold cursor-pointer hover:text-red-600 print:text-black"><input type="checkbox" className="accent-red-600" /> {type}</label>
+                    ))}
+                </div>
+
+                <div className="space-y-2 mb-6 text-sm">
+                    <div className="flex gap-2"><span className="font-bold w-32">Units Responded:</span> <PrintInput placeholder="E65, T65, R65..." /></div>
+                    <div className="flex gap-2"><span className="font-bold w-32">Address of Fire:</span> <PrintInput placeholder="Full Address" /></div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
+                    <div className="flex gap-2"><span className="font-bold">Size/Area:</span> <PrintInput /></div>
+                    <div className="flex gap-2"><span className="font-bold">Wind/Dir:</span> <PrintInput /></div>
+                    <div className="flex gap-2"><span className="font-bold">Temp:</span> <PrintInput /></div>
+                </div>
+
+                <div className="space-y-4 mb-6 text-sm">
+                    <div className="flex gap-2"><span className="font-bold w-40">Area of Origin:</span> <PrintInput /></div>
+                    <div className="flex gap-2"><span className="font-bold w-40">Property Info:</span> <PrintInput /></div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex gap-2"><span className="font-bold">Owner:</span> <PrintInput /></div>
+                        <div className="flex gap-2"><span className="font-bold">Contact #:</span> <PrintInput /></div>
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <span className="font-bold text-sm block mb-1">Witnesses / Statements:</span>
+                    <PrintTextArea className="min-h-[80px]" placeholder="Names and Contact Numbers..." />
+                </div>
+
+                <div className="mb-4">
+                    <span className="font-bold text-sm block mb-1">Narrative: Notes (Vin #, Equip. #, Agency #...)</span>
+                    <div className="border border-black min-h-[250px] p-2" style={{ backgroundImage: 'linear-gradient(transparent, transparent 27px, #ccc 28px)', backgroundSize: '100% 28px', lineHeight: '28px' }}>
+                        <textarea className="w-full h-full bg-transparent border-none resize-none outline-none leading-[28px]" placeholder="Start typing narrative..." />
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <span className="font-bold text-sm block mb-1">Conclusion/ Cause:</span>
+                    <PrintTextArea className="min-h-[60px]" placeholder="Determined cause..." />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t-2 border-black text-sm">
+                    <div className="flex gap-2"><span className="font-bold">Report By:</span> <PrintInput /></div>
+                    <div className="flex gap-2"><span className="font-bold">Date:</span> <PrintInput type="date" /></div>
+                    <div className="flex gap-2"><span className="font-bold">Shift:</span> <PrintInput /></div>
+                </div>
+            </div>
+        );
+
+        const OnScenePersonnelForm = () => {
+            const personnel = [
+                { id: "102", name: "Aguilar, Andres" }, { id: "083", name: "Alers, Angelo" }, 
+                { id: "493", name: "Arntz, Scott" }, { id: "091", name: "Bacon, Mathew" },
+                { id: "498", name: "Barker, Justin" }, { id: "094", name: "Bennett, Timothy" },
+                { id: "059", name: "Bittner, Andrew" }, { id: "090", name: "Botts, Riley" },
+                { id: "420", name: "Bracy, Robert" }, { id: "053", name: "Brown, Hunter" },
+                { id: "PH100", name: "Sanford, Scott" }, { id: "PH200", name: "Breuer, Brent" }
+            ];
+
+            return (
+                <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                    <div className="text-center border-b-2 border-black pb-4 mb-6">
+                        <h1 className="text-2xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
+                        <h2 className="text-xl font-semibold">On Scene Personnel</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-8 mb-8">
+                        <div>
+                            <div className="grid grid-cols-12 border-b-2 border-black font-bold text-xs mb-1">
+                                <div className="col-span-2">Unit #</div>
+                                <div className="col-span-2">ID #</div>
+                                <div className="col-span-7">Name</div>
+                                <div className="col-span-1">On?</div>
+                            </div>
+                            <div className="space-y-1">
+                                {personnel.map((p, i) => (
+                                    <div key={p.id} className="grid grid-cols-12 text-xs items-center border-b border-gray-200 print:border-gray-300">
+                                        <div className="col-span-2"><PrintInput className="h-4 text-xs" /></div>
+                                        <div className="col-span-2">{p.id}</div>
+                                        <div className="col-span-7 uppercase truncate">{p.name}</div>
+                                        <div className="col-span-1"><input type="checkbox" className="w-4 h-4 border-black" /></div>
+                                    </div>
+                                ))}
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={`blank-${i}`} className="grid grid-cols-12 text-xs items-center border-b border-gray-200">
+                                        <div className="col-span-2"><PrintInput className="h-4 text-xs" /></div>
+                                        <div className="col-span-2"><PrintInput className="h-4 text-xs" /></div>
+                                        <div className="col-span-7"><PrintInput className="h-4 text-xs" /></div>
+                                        <div className="col-span-1"><input type="checkbox" className="w-4 h-4 border-black" /></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-bold border-b-2 border-black mb-2 uppercase text-xs">Other - On Scene Persons</h3>
+                            <p className="text-[10px] text-gray-500 mb-2 italic">(State Fire Marshal, PCSO, ATF, etc.)</p>
+                            <table className="w-full border-collapse border border-black text-xs">
+                                <thead>
+                                    <tr className="bg-gray-100 print:bg-white">
+                                        <th className="border border-black p-1 text-left">Name</th>
+                                        <th className="border border-black p-1 text-left">Agency</th>
+                                        <th className="border border-black p-1 text-left">Contact #</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[...Array(15)].map((_, i) => (
+                                        <tr key={i} className="h-8">
+                                            <td className="border border-black p-0"><PrintInput className="h-full px-1" /></td>
+                                            <td className="border border-black p-0"><PrintInput className="h-full px-1" /></td>
+                                            <td className="border border-black p-0"><PrintInput className="h-full px-1" /></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StagingWorksheetForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="text-center mb-6">
+                    <h1 className="text-2xl font-bold">Palm Harbor Fire Rescue</h1>
+                    <h2 className="text-xl font-bold underline">Staging Worksheet</h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-12 gap-y-4 mb-6">
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Staging Officer:</span>
+                        <PrintInput />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Staging Tac-Channel:</span>
+                        <PrintInput />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Incident Command:</span>
+                        <PrintInput />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Working Fire Tac-Channel:</span>
+                        <PrintInput />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">IC Location:</span>
+                        <PrintInput />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold whitespace-nowrap">Staging Address:</span>
+                        <PrintInput />
+                    </div>
+                </div>
+
+                <div className="flex justify-between mb-6 px-4">
+                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" className="w-5 h-5 border-2 border-black" /> Second Alarm</label>
+                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" className="w-5 h-5 border-2 border-black" /> Third Alarm</label>
+                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" className="w-5 h-5 border-2 border-black" /> Fourth Alarm</label>
+                </div>
+
+                <table className="w-full border-collapse border-2 border-black mb-6">
+                    <thead>
+                        <tr>
+                            <th className="border border-black p-2 text-left w-1/2">Units report to</th>
+                            <th className="border border-black p-2 text-left w-1/4">Time</th>
+                            <th className="border border-black p-2 text-left w-1/4">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[...Array(15)].map((_, i) => (
+                            <tr key={i} className="h-8">
+                                <td className="border border-black p-1"><PrintInput /></td>
+                                <td className="border border-black p-1"><PrintInput /></td>
+                                <td className="border border-black p-1"><PrintInput /></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+                <div>
+                    <h3 className="font-bold mb-1">Notes:</h3>
+                    <PrintTextArea className="border-black min-h-[150px]" />
+                </div>
+            </div>
+        );
+
+        const FireWatchLogForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="text-center border-b-2 border-black pb-4 mb-6">
+                    <h1 className="text-2xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
+                    <h2 className="text-xl font-bold uppercase">Fire Watch Log</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                    <div className="flex flex-col gap-2">
+                        <label className="font-bold uppercase text-xs">Property Name:</label>
+                        <PrintInput className="font-bold p-1" />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="font-bold uppercase text-xs">Property Address:</label>
+                        <PrintInput className="font-bold p-1" />
+                    </div>
+                </div>
+                <table className="w-full border-collapse border-2 border-black">
+                    <thead>
+                        <tr className="bg-gray-100 print:bg-white border-b-2 border-black">
+                            <th className="border-r border-black p-2 w-32 uppercase text-sm font-bold">Date</th>
+                            <th className="border-r border-black p-2 w-32 uppercase text-sm font-bold">Time</th>
+                            <th className="border-r border-black p-2 w-48 uppercase text-sm font-bold">Fire Watch Person</th>
+                            <th className="p-2 uppercase text-sm font-bold">Conditions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[...Array(20)].map((_, i) => (
+                            <tr key={i} className="border-b border-black h-10">
+                                <td className="border-r border-black p-1"><PrintInput className="h-full px-1" /></td>
+                                <td className="border-r border-black p-1"><PrintInput className="h-full px-1" /></td>
+                                <td className="border-r border-black p-1"><PrintInput className="h-full px-1" /></td>
+                                <td className="p-1"><PrintInput className="h-full px-1" /></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div className="mt-8 text-center text-sm font-bold border-t pt-4">
+                    Forward all completed Fire Watch Logs to: fireprevention@palmharborfd.com
+                </div>
+            </div>
+        );
+
+        const SmokeAlarmForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="text-center mb-6">
+                    <h1 className="text-xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
+                    <h2 className="text-lg font-semibold italic">Community Smoke Alarm Installation- Hold Harmless Agreement</h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
+                    <div className="flex items-center gap-2"><span className="font-bold w-24">Requested by:</span> <PrintInput /></div>
+                    <div className="flex items-center gap-2"><span className="font-bold w-12">Date:</span> <PrintInput type="date" /></div>
+                    <div className="flex items-center gap-2"><span className="font-bold w-24">Address:</span> <PrintInput /></div>
+                    <div className="flex items-center gap-2"><span className="font-bold w-12">Time:</span> <PrintInput type="time" /></div>
+                    <div className="flex items-center gap-2"><span className="font-bold w-24">City:</span> <PrintInput /></div>
+                    <div className="flex items-center gap-2"><span className="font-bold w-12">Phone:</span> <PrintInput /></div>
+                </div>
+
+                <div className="flex flex-wrap gap-6 mb-4 text-sm">
+                    <label className="flex items-center gap-2"><input type="checkbox" /> Own</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" /> Rent</label>
+                    <div className="flex items-center gap-4 ml-8">
+                        <span className="font-bold">Children?</span>
+                        <label className="flex items-center gap-2"><input type="checkbox" /> Yes</label>
+                        <label className="flex items-center gap-2"><input type="checkbox" /> No</label>
+                    </div>
+                </div>
+
+                <div className="mb-4 text-sm">
+                    <span className="font-bold mr-2">Heard of program through:</span>
+                    {['Television', 'Radio', 'Newspaper', 'Brochure', 'Other'].map(src => (
+                        <label key={src} className="inline-flex items-center gap-1 mr-4"><input type="checkbox" /> {src}</label>
+                    ))}
+                </div>
+
+                <div className="flex gap-4 mb-6 text-sm">
+                    <div className="flex items-end gap-2 w-1/2"><span className="font-bold">Adult Head-of-Household:</span> <PrintInput /></div>
+                    <div className="flex items-end gap-2 w-1/2"><span className="font-bold">Number of persons:</span> <PrintInput type="number" className="w-12 text-center" /></div>
+                </div>
+
+                <div className="border border-black p-4 mb-6 text-sm space-y-2">
+                    <p className="font-bold underline">Type of installation:</p>
+                    <label className="flex items-center gap-2 block"><input type="checkbox" /> This alarm has been provided at no cost to you by Palm Harbor Fire Rescue.</label>
+                    <label className="flex items-center gap-2 block"><input type="checkbox" /> This alarm was provided by you.</label>
+                    <label className="flex items-center gap-2 block"><input type="checkbox" /> This is a battery install only.</label>
+                </div>
+
+                <div className="text-xs text-justify space-y-4 mb-8 leading-relaxed">
+                    <p>You have requested and we have installed a battery-operated smoke alarm in your residence in accordance with the manufacturer's recommendations or we have installed a new battery in your device. A smoke alarm can save your life, but only if properly maintained. Your responsibility is to test this unit weekly and replace the battery twice a year, when you set your clocks for the daylight-saving cycle.</p>
+                    <p>By accepting the smoke alarm and signing this document, you are, upon behalf of yourself, your heirs, successors, assigns, and legal representatives, irrevocably waiving and releasing any and all claims of any kind or nature which you may have had, now have, or hereafter acquire against the Palm Harbor Special Fire Control District...</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-12 gap-y-8 mt-8">
+                    <div className="border-t border-black pt-1 text-center font-bold">Resident's Signature</div>
+                    <div className="border-t border-black pt-1 text-center font-bold">Witness to Resident's Signature</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-8 pt-4 border-t-2 border-black">
+                    <div className="flex items-end gap-2"><span className="font-bold">Date Installed:</span> <PrintInput type="date" /></div>
+                    <div className="flex items-end gap-2"><span className="font-bold">By:</span> <PrintInput /></div>
+                </div>
+            </div>
+        );
+
+        const CarbonMonoxideReportForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="text-center mb-6">
+                    <div className="border border-black px-4 py-1 inline-block font-bold mb-2">***** NOTICE OF FINDINGS *****</div>
+                    <h1 className="text-3xl font-bold italic">CARBON MONOXIDE</h1>
+                    <p className="text-sm italic mt-2 px-8">
+                        is a colorless, tasteless, gas that is DEADLY. It is a byproduct of a fuel burning process.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6 border-t border-b border-black py-4">
+                    <div className="flex items-end gap-2"><span className="font-bold text-xs">DATE OF INCIDENT:</span> <PrintInput type="date" /></div>
+                    <div className="flex items-end gap-2"><span className="font-bold text-xs">ADDRESS:</span> <PrintInput /></div>
+                    <div className="flex items-end gap-2"><span className="font-bold text-xs">INCIDENT NUMBER:</span> <PrintInput /></div>
+                    <div className="flex items-end gap-2"><span className="font-bold text-xs">AGENCY:</span> <PrintInput /></div>
+                </div>
+
+                <div className="text-center mb-8">
+                    <p className="font-bold">CARBON MONOXIDE AT THE HIGHEST READING WAS</p>
+                    <div className="flex items-center justify-center gap-2 my-2">
+                        <span className="text-2xl">(</span>
+                        <PrintInput className="w-32 text-center text-2xl font-bold border-b-2 border-black" />
+                        <span className="text-2xl">)</span>
+                    </div>
+                    <p className="font-bold">PARTS PER MILLION WAS FOUND</p>
+                </div>
+
+                <div className="mb-8">
+                    <h3 className="font-bold text-center underline mb-4">*** What Does This Reading Mean? ***</h3>
+                    <div className="flex gap-4 mb-4">
+                        <div className="w-32 font-bold text-right shrink-0">Less than<br/>10 ppm</div>
+                        <div className="text-sm border-l-2 border-black pl-4">Our instruments did not detect elevated levels at this time. Check your carbon monoxide detector per the manufacturer's recommendations.</div>
+                    </div>
+                    <div className="flex gap-4 mb-4">
+                        <div className="w-32 font-bold text-right shrink-0">10 or<br/>more ppm</div>
+                        <div className="text-sm border-l-2 border-black pl-4">We have detected potentially dangerous levels of carbon monoxide. We are recommending you leave your home immediately.</div>
+                    </div>
+                    <div className="flex gap-4 mb-4">
+                        <div className="w-32 font-bold text-right shrink-0">100 ppm<br/>or greater</div>
+                        <div className="text-sm border-l-2 border-black pl-4 font-bold">LEAVE YOUR HOME IMMEDIATELY!!!! It is not safe until repairs are made.</div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 text-xs font-bold">
+                    <div className="flex items-end gap-2">ISSUED BY: <PrintInput /></div>
+                    <div className="flex items-end gap-2">DATE: <PrintInput type="date" /></div>
+                    <div className="flex items-end gap-2">SIGNATURE: <PrintInput /></div>
+                    <div className="flex items-end gap-2">RECEIVED BY: <PrintInput /></div>
+                </div>
+            </div>
+        );
+
+        const EMSIncidentReportForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="text-center border-b-2 border-black pb-4 mb-6">
+                    <h1 className="text-2xl font-bold uppercase">Division of EMS</h1>
+                    <h2 className="text-xl font-semibold">Incident Report</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+                    <div className="space-y-4">
+                        <div className="flex gap-2 font-bold"><span>Employee Name:</span><PrintInput /></div>
+                        <div className="flex gap-2 font-bold"><span>Employee Rank:</span><PrintInput /></div>
+                        <div className="flex gap-2 font-bold"><span>Employee Number:</span><PrintInput /></div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex gap-2 font-bold"><span>Today's Date:</span><PrintInput type="date" /></div>
+                        <div className="flex gap-2 font-bold"><span>Date of Incident:</span><PrintInput type="date" /></div>
+                        <div className="flex gap-2 font-bold"><span>Incident #:</span><PrintInput /></div>
+                    </div>
+                </div>
+                <div className="mt-6 border-t-2 border-black pt-2">
+                    <label className="font-bold block mb-4 uppercase text-xs">Description of Incident:</label>
+                    <PrintTextArea className="min-h-[500px]" style={{ backgroundImage: 'linear-gradient(transparent, transparent 31px, #e5e7eb 31px)', backgroundSize: '100% 32px', lineHeight: '32px' }} />
+                </div>
+            </div>
+        );
+
+        // --- File Viewer/Editor Controller ---
+        const FileController = ({ file }) => {
+            const isPdf = file.type === 'pdf';
+            const filePath = `./${encodeURIComponent(file.fileName)}`;
+            
+            // Map file IDs to their corresponding Digital Twin component
+            const digitalTwins = {
+                'witness-form': WitnessStatementForm,
+                'fire-field': FieldInfoForm,
+                'personnel-report': OnScenePersonnelForm,
+                'staging-worksheet': StagingWorksheetForm,
+                'fire-watch-log': FireWatchLogForm,
+                'smoke-form': SmokeAlarmForm,
+                'co-report': CarbonMonoxideReportForm,
+                'ems-incident': EMSIncidentReportForm
+            };
+
+            const DigitalTwinComponent = digitalTwins[file.id];
+            const [viewMode, setViewMode] = useState(DigitalTwinComponent ? 'fill' : 'view');
+
+            return (
+                <div className="flex flex-col h-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                    {/* Toolbar */}
+                    <div className="bg-white border-b border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm z-10 print:hidden gap-4">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className={`p-2 rounded-lg ${isPdf ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                <FileText size={20} />
+                            </div>
+                            <div className="overflow-hidden">
+                                <h3 className="font-bold text-slate-800 text-sm truncate">{file.name}</h3>
+                                <p className="text-xs text-slate-500 font-mono truncate max-w-[200px]">{file.fileName}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            {DigitalTwinComponent && (
+                                <div className="flex bg-slate-100 p-1 rounded-lg mr-2">
+                                    <button 
+                                        onClick={() => setViewMode('fill')}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'fill' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        <Edit size={14} /> Fill Form
+                                    </button>
+                                    <button 
+                                        onClick={() => setViewMode('view')}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'view' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        <Eye size={14} /> Original
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Actions based on mode */}
+                            {viewMode === 'fill' ? (
+                                <button 
+                                    onClick={() => window.print()}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg shadow-slate-900/10"
+                                >
+                                    <Printer size={16} /> Print Filled
+                                </button>
+                            ) : (
+                                <>
+                                    <a 
+                                        href={filePath} 
+                                        download
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                    >
+                                        <Download size={16} /> <span className="hidden lg:inline">Download</span>
+                                    </a>
+                                    {isPdf && (
+                                        <button 
+                                            onClick={() => document.getElementById('pdf-frame').contentWindow.print()}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                        >
+                                            <Printer size={16} /> <span className="hidden lg:inline">Print</span>
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 bg-slate-50 relative overflow-hidden pdf-container overflow-y-auto">
+                        {viewMode === 'fill' && DigitalTwinComponent ? (
+                            <div className="p-8">
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3 text-sm text-blue-800 print:hidden max-w-4xl mx-auto">
+                                    <Info size={20} className="shrink-0" />
+                                    <div>
+                                        <p className="font-bold">Digital Fill Mode</p>
+                                        <p>Type directly into the fields below. The layout will match your Word document exactly when printed.</p>
+                                    </div>
+                                </div>
+                                <DigitalTwinComponent />
+                            </div>
+                        ) : isPdf ? (
+                            <iframe 
+                                id="pdf-frame"
+                                src={filePath} 
+                                className="w-full h-full border-none" 
+                                title="Document Viewer"
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                                <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                    <FileText size={48} />
+                                </div>
+                                <div className="max-w-md space-y-2">
+                                    <h3 className="text-xl font-black text-slate-800">Microsoft Word Document</h3>
+                                    <p className="text-slate-500 text-sm">
+                                        This document is in <strong>.docx</strong> format. For best results (layout fidelity), please download and open it in Word, or use the <strong>Fill Form</strong> mode if available to type directly in browser.
+                                    </p>
+                                </div>
+                                <a 
+                                    href={filePath}
+                                    download
+                                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <Download size={20} /> Download File
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Command Dashboard ---
+        const CommandDashboard = ({ onNavigate, navigation }) => {
+            const [query, setQuery] = useState('');
+            
+            const groups = navigation.reduce((acc, curr) => {
+                if (!acc[curr.category]) acc[curr.category] = [];
+                acc[curr.category].push(curr);
+                return acc;
+            }, {});
+
+            return (
+                <div className="max-w-7xl mx-auto px-6 py-8 print:hidden">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-red-600 font-black tracking-widest text-[10px] uppercase">
+                                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                                Palm Harbor Command Center
+                            </div>
+                            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Officer Digital <span className="text-red-600">Clipboard</span></h1>
+                            <p className="text-slate-500 text-sm max-w-lg font-medium leading-relaxed">
+                                Access official department forms, policies, and reports. 
+                                <span className="block mt-1 text-slate-400">Select any form to use the new <strong>Auto-Fill</strong> feature or view the original document.</span>
+                            </p>
+                        </div>
+                        
+                        <div className="relative w-full md:w-auto">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input 
+                                type="text" 
+                                placeholder="Search documents..." 
+                                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-600/20 focus:border-red-600 outline-none transition-all shadow-sm"
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Document Grid */}
+                    <div className="space-y-12">
+                        {Object.entries(groups).map(([category, items]) => {
+                            const filtered = items.filter(i => i.name.toLowerCase().includes(query.toLowerCase()));
+                            if (filtered.length === 0) return null;
+                            return (
+                                <div key={category} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 whitespace-nowrap">{category}</h2>
+                                        <div className="h-px bg-slate-200 w-full"></div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                        {filtered.map(item => (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => onNavigate(item.id)}
+                                                className="group flex flex-col bg-white border border-slate-200 rounded-2xl p-6 hover:border-red-600/30 hover:shadow-xl hover:shadow-red-600/5 transition-all text-left relative overflow-hidden"
+                                            >
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className={`p-3 rounded-xl ${item.type === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'} transition-colors group-hover:scale-110 duration-300`}>
+                                                        <item.icon size={24} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 group-hover:text-red-600 transition-colors">
+                                                        {item.type.toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="mb-6 flex-1">
+                                                    <h3 className="font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight mb-1">{item.name}</h3>
+                                                    <p className="text-xs text-slate-400 truncate">{item.fileName}</p>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 group-hover:text-slate-900 transition-colors mt-auto">
+                                                    <span className="group-hover:underline">View Document</span>
+                                                    <ArrowRight size={14} className="transform group-hover:translate-x-1 transition-transform" />
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const Info = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></IconBase>;
+
+        // --- Main App ---
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('dashboard'); 
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [sidebarSearch, setSidebarSearch] = useState('');
+            
+            const [expandedCategories, setExpandedCategories] = useState({
+                'Officer Clipboard': true,
+                'EMS': true
+            });
+
+            // Complete mapping of all files provided by the user
+            const navigation = useMemo(() => [
+                // Officer Clipboard - Reordered as requested
+                { 
+                    id: 'fire-field', 
+                    name: 'Field Information Report', 
+                    fileName: 'PHFR - Officer Clipboard - Field Information Report.docx', 
+                    type: 'docx', 
+                    icon: ClipboardCheck, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'witness-form', 
+                    name: 'Witness / Statement', 
+                    fileName: 'PHFR - Officer Clipboard - Witness Forms.docx', 
+                    type: 'docx', 
+                    icon: PenTool, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'personnel-report', 
+                    name: 'On Scene Personnel', 
+                    fileName: 'PHFR - Officer Clipboard - On Scene Personnel 2023-11.docx', 
+                    type: 'docx', 
+                    icon: Users, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'staging-worksheet', 
+                    name: 'Staging Worksheet', 
+                    fileName: 'PHFR - Officer Clipboard - Staging Worksheet.pdf', 
+                    type: 'pdf', 
+                    icon: MapIcon, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'burning-policy', 
+                    name: 'Open Burning Policy', 
+                    fileName: 'PHFR - Officer Clipboard - Open Burning Policy.pdf', 
+                    type: 'pdf', 
+                    icon: Droplets, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'fire-watch-req', 
+                    name: 'Fire Watch Requirements', 
+                    fileName: 'PHFR - Officer Clipboard - Fire Watch Requirements.pdf', 
+                    type: 'pdf', 
+                    icon: AlertTriangle, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'fire-watch-log', 
+                    name: 'Fire Watch Log', 
+                    fileName: 'PHFR - Officer Clipboard - Fire Watch Log.pdf', 
+                    type: 'pdf', 
+                    icon: Flame, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'smoke-form', 
+                    name: 'Smoke Alarm Install', 
+                    fileName: 'PHFR - Officer Clipboard - Community Smoke Alarm Installation Form.pdf', 
+                    type: 'pdf', 
+                    icon: BellRing, 
+                    category: 'Officer Clipboard' 
+                },
+                { 
+                    id: 'co-report', 
+                    name: 'Carbon Monoxide Report', 
+                    fileName: 'PHFR - Officer Clipboard - Carbon Monoxide Findings Report.doc', 
+                    type: 'doc', 
+                    icon: Wind, 
+                    category: 'Officer Clipboard' 
+                },
+
+                // EMS
+                { 
+                    id: 'exposure-plan', 
+                    name: 'Exposure Control Plan', 
+                    fileName: 'PHFR Exposure Control Plan revision 10-2022 (1).pdf', 
+                    type: 'pdf', 
+                    icon: ShieldAlert, 
+                    category: 'EMS' 
+                },
+                { 
+                    id: 'elderlinks', 
+                    name: 'Elderlinks Referral', 
+                    fileName: 'Elderlinks_referral_form.pdf', 
+                    type: 'pdf', 
+                    icon: UserPlus, 
+                    category: 'EMS' 
+                },
+                { 
+                    id: 'infection-form', 
+                    name: 'Infectious Exposure', 
+                    fileName: 'PHFR_InfectiousExposureForm.pdf', 
+                    type: 'pdf', 
+                    icon: FileWarning, 
+                    category: 'EMS' 
+                },
+                { 
+                    id: 'ems-incident', 
+                    name: 'EMS Incident Report', 
+                    fileName: 'Division of EMS - Incident Report.docx', 
+                    type: 'docx', 
+                    icon: HeartPulse, 
+                    category: 'EMS' 
+                }
+            ], []);
+
+            const toggleCategory = (cat) => {
+                setExpandedCategories(prev => ({
+                    ...prev,
+                    [cat]: !prev[cat]
+                }));
+            };
+
+            const activeItem = navigation.find(n => n.id === activeTab);
+
+            const renderContent = () => {
+                if (activeTab === 'dashboard') {
+                    return <CommandDashboard onNavigate={setActiveTab} navigation={navigation} />;
+                }
+                if (activeItem) {
+                    return <FileController file={activeItem} />;
+                }
+                return <div className="p-10 text-center text-slate-400">File not found.</div>;
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
+                    {/* Sidebar Navigation */}
+                    <aside className={`
+                        ${sidebarOpen ? 'w-80' : 'w-20'} 
+                        bg-slate-950 text-white flex-shrink-0 print:hidden fixed md:sticky top-0 h-screen z-50 flex flex-col transition-all duration-300 shadow-2xl
+                    `}>
+                        <div className="p-6 flex items-center justify-between border-b border-white/5 h-24">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <img 
+                                    src="./Screenshot%202025-12-10%20100334.png" 
+                                    alt="PHFR Logo" 
+                                    className="h-10 w-auto object-contain rounded-lg"
+                                />
+                                {sidebarOpen && (
+                                    <div className="animate-in fade-in duration-300">
+                                        <span className="font-black text-lg tracking-tighter block leading-none">PHFR</span>
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Officer Suite</span>
+                                    </div>
+                                )}
+                            </div>
+                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-white/5 rounded-xl transition-all text-slate-400 hover:text-white">
+                                {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                            </button>
+                        </div>
+
+                        <nav className="p-4 space-y-4 overflow-y-auto flex-grow scroll-smooth">
+                            <button
+                                onClick={() => setActiveTab('dashboard')}
+                                className={`
+                                    w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group mb-2
+                                    ${activeTab === 'dashboard' 
+                                        ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' 
+                                        : 'text-slate-500 hover:bg-white/5 hover:text-white'}
+                                    ${!sidebarOpen ? 'justify-center' : ''}
+                                `}
+                            >
+                                <LayoutDashboard size={20} className="flex-shrink-0" />
+                                {sidebarOpen && <span className="text-sm font-black uppercase tracking-widest">Dashboard</span>}
+                            </button>
+
+                            {sidebarOpen && (
+                                <div className="px-1 mb-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Quick find..." 
+                                            className="w-full bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg pl-9 pr-3 py-2.5 focus:outline-none focus:border-red-600 transition-colors placeholder:text-slate-600"
+                                            value={sidebarSearch}
+                                            onChange={(e) => setSidebarSearch(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {['Officer Clipboard', 'EMS'].map(cat => {
+                                const isExpanded = expandedCategories[cat];
+                                const items = navigation.filter(item => 
+                                    item.category === cat && 
+                                    (sidebarSearch === '' || item.name.toLowerCase().includes(sidebarSearch.toLowerCase()))
+                                );
+                                
+                                // Hide category header if search is active and no items match
+                                if (items.length === 0 && sidebarSearch !== '') return null;
+
+                                return (
+                                    <div key={cat} className="space-y-1">
+                                        <button 
+                                            onClick={() => sidebarOpen && toggleCategory(cat)}
+                                            className={`
+                                                w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors group
+                                                ${sidebarOpen ? 'hover:bg-white/5' : 'justify-center'}
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-red-600 transition-all"></div>
+                                                {sidebarOpen && <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300">{cat}</span>}
+                                            </div>
+                                            {sidebarOpen && (
+                                                isExpanded ? <ChevronDown size={14} className="text-slate-600" /> : <ChevronRight size={14} className="text-slate-600" />
+                                            )}
+                                        </button>
+
+                                        {(isExpanded || !sidebarOpen || sidebarSearch !== '') && (
+                                            <div className={`${sidebarOpen ? 'ml-6 space-y-1' : 'space-y-1 hidden'}`}>
+                                                {items.map((item) => (
+                                                    <button
+                                                        key={item.id}
+                                                        onClick={() => setActiveTab(item.id)}
+                                                        className={`
+                                                            w-full flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-300 group/item
+                                                            ${activeTab === item.id 
+                                                                ? 'bg-white/10 text-red-500 font-bold border-l-4 border-red-600' 
+                                                                : 'text-slate-500 hover:text-white'}
+                                                            ${!sidebarOpen ? 'justify-center' : ''}
+                                                        `}
+                                                        title={!sidebarOpen ? item.name : ''}
+                                                    >
+                                                        <item.icon size={16} className={`flex-shrink-0 ${activeTab === item.id ? 'text-red-500' : ''}`} />
+                                                        {sidebarOpen && <span className="text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </nav>
+                        
+                        <div className="p-6 border-t border-white/5 flex flex-col gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-red-500">JD</div>
+                                {sidebarOpen && (
+                                    <div className="text-[10px] uppercase font-bold text-slate-400">
+                                        Shift Officer <br /> <span className="text-white">Logged In</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+                        {/* Top Bar */}
+                        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 p-6 flex items-center justify-between print:hidden flex-shrink-0">
+                            <div className="flex items-center gap-4">
+                                <h2 className="font-black text-xl text-slate-900 tracking-tight">
+                                    {activeTab === 'dashboard' ? 'Station Dashboard' : activeItem?.name}
+                                </h2>
+                                {activeTab !== 'dashboard' && (
+                                    <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                        <Eye size={12} /> View Mode
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => setActiveTab('dashboard')}
+                                    className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white border hover:bg-slate-50 text-slate-600 shadow-sm'}`}
+                                    disabled={activeTab === 'dashboard'}
+                                >
+                                    <LayoutDashboard size={18} />
+                                </button>
+                            </div>
+                        </header>
+
+                        {/* Content Viewer */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50">
+                            {renderContent()}
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
