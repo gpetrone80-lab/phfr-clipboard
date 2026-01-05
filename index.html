@@ -9,37 +9,165 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        @media print {
-            @page { margin: 0.5in; size: auto; }
-            body { -webkit-print-color-adjust: exact; background-color: white !important; }
-            .no-print { display: none !important; }
-            iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
-            .print-container { width: 100% !important; max-width: none !important; padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; }
-            input, textarea { border: none !important; border-bottom: 1px solid black !important; background: transparent !important; padding: 0 !important; margin: 0 !important; resize: none !important; }
-            input::placeholder, textarea::placeholder { color: transparent !important; }
-            /* Specific fix for tables in print */
-            table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid black !important; }
+        /* --- THEME VARIABLES --- */
+        :root {
+            /* Default: Theme 1 (Tactical Dark) */
+            --bg-body: #111111;
+            --bg-sidebar: #000000;
+            --bg-panel: #1E1E1E;
+            --text-main: #E0E0E0;
+            --text-muted: #9CA3AF;
+            --accent-color: #D50000; /* Red */
+            --accent-hover: #b91c1c;
+            --border-color: #333333;
+            --input-bg: rgba(255, 255, 255, 0.05);
         }
-        .pdf-container::-webkit-scrollbar { width: 8px; height: 8px; }
-        .pdf-container::-webkit-scrollbar-track { background: #f1f5f9; }
-        .pdf-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .pdf-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Theme 2: Clean Blue */
+        body.theme-2 {
+            --bg-body: #f8fafc;
+            --bg-sidebar: #1e3a8a; /* Navy Blue */
+            --bg-panel: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #f59e0b; /* Gold/Amber */
+            --accent-hover: #d97706;
+            --border-color: #e2e8f0;
+            --input-bg: #f1f5f9;
+        }
+
+        /* Theme 3: Red Line */
+        body.theme-3 {
+            --bg-body: #ffffff;
+            --bg-sidebar: #b91c1c; /* Fire Engine Red */
+            --bg-panel: #ffffff;
+            --text-main: #000000;
+            --text-muted: #4b5563;
+            --accent-color: #111111; /* Black Accents */
+            --accent-hover: #333333;
+            --border-color: #d1d5db;
+            --input-bg: #fef2f2;
+        }
+
+        /* Theme 4: Maltese Gold */
+        body.theme-4 {
+            --bg-body: #fafaf9;
+            --bg-sidebar: #1c1917; /* Warm Black */
+            --bg-panel: #ffffff;
+            --text-main: #1c1917;
+            --text-muted: #57534e;
+            --accent-color: #d97706; /* Gold */
+            --accent-hover: #b45309;
+            --border-color: #e7e5e4;
+            --input-bg: #f5f5f4;
+        }
+
+        /* --- GLOBAL STYLES USING VARIABLES --- */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Sidebar Styling */
+        .app-sidebar {
+            background-color: var(--bg-sidebar) !important;
+            border-right: 1px solid var(--border-color);
+        }
         
-        .form-input { 
-            background-color: rgba(241, 245, 249, 0.5); 
+        .app-sidebar .sidebar-text-main { color: white !important; } /* Sidebar text usually white on dark/colored backgrounds */
+        .app-sidebar .sidebar-text-muted { color: rgba(255,255,255, 0.6) !important; }
+        .app-sidebar .sidebar-divider { border-color: rgba(255,255,255, 0.1) !important; }
+
+        /* Main Content Styling */
+        .app-header {
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .file-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+        }
+        .file-card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Interactive Elements */
+        .accent-text { color: var(--accent-color) !important; }
+        .accent-bg { background-color: var(--accent-color) !important; color: white; }
+        .accent-border { border-color: var(--accent-color) !important; }
+
+        /* Form Inputs */
+        .form-input {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
             transition: all 0.2s;
         }
         .form-input:focus {
-            background-color: white;
-            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+            background-color: var(--bg-panel);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 1px var(--accent-color);
+        }
+
+        /* --- PRINT STYLES (UNCHANGED) --- */
+        @media print {
+            @page { margin: 0.5in; size: auto; }
+            body { 
+                -webkit-print-color-adjust: exact; 
+                background-color: white !important; 
+                color: black !important;
+            }
+            .no-print { display: none !important; }
+            iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+            
+            .print-container { 
+                width: 100% !important; 
+                max-width: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                border: none !important; 
+                box-shadow: none !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            
+            input, textarea { 
+                border: none !important; 
+                border-bottom: 1px solid black !important; 
+                background: transparent !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                resize: none !important; 
+                color: black !important;
+                box-shadow: none !important;
+            }
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { border: 1px solid black !important; }
+        }
+        
+        /* Special Paper View Class */
+        .paper-view {
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid #e5e7eb !important;
+        }
+        .paper-view .form-input {
+            background-color: rgba(241, 245, 249, 0.5) !important;
+            color: black !important;
+            border: none !important;
+            border-bottom: 1px solid black !important;
         }
     </style>
 </head>
-<body>
+<body class="theme-1">
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useEffect } = React;
 
         // --- Icons ---
         const IconBase = ({ children, ...props }) => (
@@ -48,6 +176,7 @@
             </svg>
         );
 
+        // All icons defined here (ClipboardCheck, Flame, etc.) - Kept same as before
         const ClipboardCheck = (props) => <IconBase {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></IconBase>;
         const Flame = (props) => <IconBase {...props}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></IconBase>;
         const MapIcon = (props) => <IconBase {...props}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" x2="8" y1="2" y2="18"/><line x1="16" x2="16" y1="6" y2="22"/></IconBase>;
@@ -75,6 +204,7 @@
         const Eye = (props) => <IconBase {...props}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></IconBase>;
         const Edit = (props) => <IconBase {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></IconBase>;
         const Sun = (props) => <IconBase {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconBase>;
+        const Palette = (props) => <IconBase {...props}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></IconBase>;
 
         // --- Reusable Form Components ---
         const PrintInput = ({ className = "", ...props }) => (
@@ -95,7 +225,7 @@
         // --- Specific Forms (Digital Twins) ---
 
         const WitnessStatementForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="flex justify-between items-end mb-4 border-b-2 border-black pb-2">
                     <div className="w-1/3">
                         <div className="flex items-center gap-2 mb-1">
@@ -164,8 +294,78 @@
             </div>
         );
 
+        const ElderlinksReferralForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 text-xs paper-view">
+                <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-6">
+                    <div className="space-y-1 w-1/3">
+                        <div className="flex gap-2 font-bold items-center"><span>Reporting Agency:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 font-bold items-center"><span>Name/Shift:</span><PrintInput className="flex-1" /></div>
+                    </div>
+                    <div className="text-center w-1/3">
+                        <h1 className="text-2xl font-black uppercase text-gray-800">Elderlinks</h1>
+                        <h2 className="text-sm font-bold">Referral Form</h2>
+                    </div>
+                    <div className="text-right font-bold text-[10px] w-1/3">
+                        FAX: 727-234-4426<br/>
+                        Attention: Tracy Barrows
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                        <h3 className="font-bold underline uppercase">Client Information</h3>
+                        <div className="flex gap-2 items-center"><span>Name:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Address:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>City:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Zip:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Phone:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-4 items-center pt-1">
+                            <label className="flex items-center gap-1"><input type="checkbox" /> Male</label>
+                            <label className="flex items-center gap-1"><input type="checkbox" /> Female</label>
+                            <div className="flex gap-2 items-center ml-4"><span>DOB:</span><PrintInput className="w-24" /></div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="font-bold underline uppercase">Emergency Contact</h3>
+                        <div className="flex gap-2 items-center"><span>Name:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Address:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Phone:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2 items-center"><span>Relationship:</span><PrintInput className="flex-1" /></div>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 p-3 border border-gray-300 mb-6 print:bg-white print:border-black">
+                    <h3 className="font-bold mb-2 uppercase text-[10px]">Nature of Presenting Problem (Check all that apply)</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                        {['Chore', 'Food', 'Legal', 'Day Care', 'Homemaker', 'Medical', 'Personal Care', 'Substance Abuse', 'Financial', 'Housing', 'Mental Health', 'Transportation'].map(p => (
+                            <label key={p} className="flex items-center gap-1 cursor-pointer print:text-black hover:text-blue-600"><input type="checkbox" className="accent-black" /> {p}</label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mb-6">
+                    <label className="font-bold block border-b border-black mb-1 uppercase text-xs">Notes (Please write legibly):</label>
+                    <PrintTextArea className="min-h-[150px]" />
+                </div>
+
+                <div className="border-t-2 border-black pt-4 flex justify-between items-center">
+                    <div className="flex gap-4 items-center">
+                        <span className="font-bold">Transported to Hospital?</span>
+                        <label className="flex gap-1"><input type="radio" name="trans" /> Y</label>
+                        <label className="flex gap-1"><input type="radio" name="trans" /> N</label>
+                        <div className="flex gap-2 items-center ml-4"><span>Facility:</span><PrintInput className="w-48" /></div>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                        <span className="font-bold">Customer aware of referral?</span>
+                        <label className="flex gap-1"><input type="radio" name="aware" /> Y</label>
+                        <label className="flex gap-1"><input type="radio" name="aware" /> N</label>
+                    </div>
+                </div>
+            </div>
+        );
+
         const FieldInfoForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
                     <div className="text-sm w-1/3">
                         <div className="flex gap-2 mb-1"><span className="font-bold">Date:</span> <PrintInput type="date" className="w-32" /></div>
@@ -243,7 +443,7 @@
             ];
 
             return (
-                <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+                <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                     <div className="text-center border-b-2 border-black pb-4 mb-6">
                         <h1 className="text-2xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
                         <h2 className="text-xl font-semibold">On Scene Personnel</h2>
@@ -303,7 +503,7 @@
         };
 
         const StagingWorksheetForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="text-center mb-6">
                     <h1 className="text-2xl font-bold">Palm Harbor Fire Rescue</h1>
                     <h2 className="text-xl font-bold underline">Staging Worksheet</h2>
@@ -371,7 +571,7 @@
         );
 
         const FireWatchLogForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="text-center border-b-2 border-black pb-4 mb-6">
                     <h1 className="text-2xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
                     <h2 className="text-xl font-bold uppercase">Fire Watch Log</h2>
@@ -413,7 +613,7 @@
         );
 
         const SmokeAlarmForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="text-center mb-6">
                     <h1 className="text-xl font-bold uppercase">Palm Harbor Fire Rescue</h1>
                     <h2 className="text-lg font-semibold italic">Community Smoke Alarm Installation- Hold Harmless Agreement</h2>
@@ -475,7 +675,7 @@
         );
 
         const CarbonMonoxideReportForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-serif text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="text-center mb-6">
                     <div className="border border-black px-4 py-1 inline-block font-bold mb-2">***** NOTICE OF FINDINGS *****</div>
                     <h1 className="text-3xl font-bold italic">CARBON MONOXIDE</h1>
@@ -527,7 +727,7 @@
         );
 
         const EMSIncidentReportForm = () => (
-            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10">
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view">
                 <div className="text-center border-b-2 border-black pb-4 mb-6">
                     <h1 className="text-2xl font-bold uppercase">Division of EMS</h1>
                     <h2 className="text-xl font-semibold">Incident Report</h2>
@@ -560,6 +760,7 @@
             // Map file IDs to their corresponding Digital Twin component
             const digitalTwins = {
                 'witness-form': WitnessStatementForm,
+                'elderlinks': ElderlinksReferralForm,
                 'fire-field': FieldInfoForm,
                 'personnel-report': OnScenePersonnelForm,
                 'staging-worksheet': StagingWorksheetForm,
@@ -573,31 +774,33 @@
             const [viewMode, setViewMode] = useState(DigitalTwinComponent ? 'fill' : 'view');
 
             return (
-                <div className="flex flex-col h-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                <div className="flex flex-col h-full bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm print:bg-white print:border-none print:shadow-none file-container">
                     {/* Toolbar */}
-                    <div className="bg-white border-b border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-center shadow-sm z-10 print:hidden gap-4">
+                    <div className="app-header text-fire-text border-b border-gray-700 p-4 flex flex-col sm:flex-row justify-between items-center shadow-lg z-10 print:hidden gap-4">
                         <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className={`p-2 rounded-lg ${isPdf ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                            <div className={`p-2 rounded-lg ${isPdf ? 'accent-bg' : 'bg-gray-800 text-white'}`}>
                                 <FileText size={20} />
                             </div>
                             <div className="overflow-hidden">
-                                <h3 className="font-bold text-slate-800 text-sm truncate">{file.name}</h3>
-                                <p className="text-xs text-slate-500 font-mono truncate max-w-[200px]">{file.fileName}</p>
+                                <h3 className="font-bold text-white text-sm truncate" style={{color: 'var(--text-main)'}}>{file.name}</h3>
+                                <p className="text-xs text-gray-400 font-mono truncate max-w-[200px]" style={{color: 'var(--text-muted)'}}>{file.fileName}</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                             {DigitalTwinComponent && (
-                                <div className="flex bg-slate-100 p-1 rounded-lg mr-2">
+                                <div className="flex bg-gray-800 p-1 rounded-lg mr-2 border border-gray-700" style={{background: 'var(--bg-sidebar)', borderColor: 'var(--border-color)'}}>
                                     <button 
                                         onClick={() => setViewMode('fill')}
-                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'fill' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'fill' ? 'accent-bg shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                        style={viewMode !== 'fill' ? {color: 'var(--text-muted)'} : {}}
                                     >
                                         <Edit size={14} /> Fill Form
                                     </button>
                                     <button 
                                         onClick={() => setViewMode('view')}
-                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'view' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'view' ? 'accent-bg shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                        style={viewMode !== 'view' ? {color: 'var(--text-muted)'} : {}}
                                     >
                                         <Eye size={14} /> Original
                                     </button>
@@ -608,7 +811,7 @@
                             {viewMode === 'fill' ? (
                                 <button 
                                     onClick={() => window.print()}
-                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg shadow-slate-900/10"
+                                    className="flex items-center gap-2 px-4 py-2 accent-bg hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg"
                                 >
                                     <Printer size={16} /> Print Filled
                                 </button>
@@ -617,14 +820,15 @@
                                     <a 
                                         href={filePath} 
                                         download
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                        className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors border border-gray-600"
+                                        style={{background: 'var(--bg-sidebar)', borderColor: 'var(--border-color)', color: 'var(--text-main)'}}
                                     >
                                         <Download size={16} /> <span className="hidden lg:inline">Download</span>
                                     </a>
                                     {(isPdf || isHtml) && (
                                         <button 
                                             onClick={() => document.getElementById('pdf-frame').contentWindow.print()}
-                                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
+                                            className="flex items-center gap-2 px-4 py-2 accent-bg hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg"
                                         >
                                             <Printer size={16} /> <span className="hidden lg:inline">Print</span>
                                         </button>
@@ -635,13 +839,13 @@
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 bg-slate-50 relative overflow-hidden pdf-container overflow-y-auto">
+                    <div className="flex-1 bg-fire-dark relative overflow-hidden pdf-container overflow-y-auto print:bg-white print:overflow-visible" style={{background: 'var(--bg-body)'}}>
                         {viewMode === 'fill' && DigitalTwinComponent ? (
-                            <div className="p-8">
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex gap-3 text-sm text-blue-800 print:hidden max-w-4xl mx-auto">
-                                    <Info size={20} className="shrink-0" />
+                            <div className="p-8 print:p-0">
+                                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6 flex gap-3 text-sm text-gray-300 print:hidden max-w-4xl mx-auto shadow-lg" style={{background: 'var(--bg-panel)', borderColor: 'var(--border-color)', color: 'var(--text-muted)'}}>
+                                    <div className="text-fire-gold accent-text"><Info size={20} className="shrink-0" /></div>
                                     <div>
-                                        <p className="font-bold">Digital Fill Mode</p>
+                                        <p className="font-bold text-white" style={{color: 'var(--text-main)'}}>Digital Fill Mode</p>
                                         <p>Type directly into the fields below. The layout will match your Word document exactly when printed.</p>
                                     </div>
                                 </div>
@@ -656,19 +860,19 @@
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
-                                <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                <div className="w-24 h-24 bg-gray-800 accent-text rounded-full flex items-center justify-center mb-4 border border-gray-700 shadow-xl" style={{background: 'var(--bg-panel)', borderColor: 'var(--border-color)'}}>
                                     <FileText size={48} />
                                 </div>
-                                <div className="max-w-md space-y-2">
-                                    <h3 className="text-xl font-black text-slate-800">Microsoft Word Document</h3>
-                                    <p className="text-slate-500 text-sm">
+                                <div className="max-w-md space-y-2 text-gray-300">
+                                    <h3 className="text-xl font-black text-white" style={{color: 'var(--text-main)'}}>Microsoft Word Document</h3>
+                                    <p className="text-sm" style={{color: 'var(--text-muted)'}}>
                                         This document is in <strong>.docx</strong> format. For best results (layout fidelity), please download and open it in Word, or use the <strong>Fill Form</strong> mode if available to type directly in browser.
                                     </p>
                                 </div>
                                 <a 
                                     href={filePath}
                                     download
-                                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
+                                    className="flex items-center gap-3 px-8 py-4 accent-bg hover:bg-red-700 text-white font-bold rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95"
                                 >
                                     <Download size={20} /> Download File
                                 </a>
@@ -694,25 +898,26 @@
                     {/* Header */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
                         <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-red-600 font-black tracking-widest text-[10px] uppercase">
-                                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                            <div className="flex items-center gap-2 accent-text font-black tracking-widest text-[10px] uppercase">
+                                <span className="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
                                 Palm Harbor Command Center
                             </div>
-                            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Officer Digital <span className="text-red-600">Clipboard</span></h1>
-                            <p className="text-slate-500 text-sm max-w-lg font-medium leading-relaxed">
+                            <h1 className="text-4xl font-black text-white tracking-tighter" style={{color: 'var(--text-main)'}}>Officer Digital <span className="accent-text">Clipboard</span></h1>
+                            <p className="text-gray-400 text-sm max-w-lg font-medium leading-relaxed" style={{color: 'var(--text-muted)'}}>
                                 Access official department forms, policies, and reports. 
-                                <span className="block mt-1 text-slate-400">Select any form to use the new <strong>Auto-Fill</strong> feature or view the original document.</span>
+                                <span className="block mt-1 accent-text">Select any form to use the new <strong>Auto-Fill</strong> feature or view the original document.</span>
                             </p>
                         </div>
                         
                         <div className="relative w-full md:w-auto">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input 
                                 type="text" 
                                 placeholder="Search documents..." 
-                                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-600/20 focus:border-red-600 outline-none transition-all shadow-sm"
+                                className="w-full md:w-64 pl-10 pr-4 py-2.5 bg-fire-panel border border-gray-700 text-white rounded-xl focus:ring-2 accent-border focus:border-red-600 outline-none transition-all shadow-sm placeholder-gray-600 form-input"
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
+                                style={{background: 'var(--bg-panel)', borderColor: 'var(--border-color)', color: 'var(--text-main)'}}
                             />
                         </div>
                     </div>
@@ -725,8 +930,8 @@
                             return (
                                 <div key={category} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="flex items-center gap-4 mb-6">
-                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400 whitespace-nowrap">{category}</h2>
-                                        <div className="h-px bg-slate-200 w-full"></div>
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-500 whitespace-nowrap" style={{color: 'var(--text-muted)'}}>{category}</h2>
+                                        <div className="h-px bg-gray-800 w-full" style={{background: 'var(--border-color)'}}></div>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -734,23 +939,23 @@
                                             <button
                                                 key={item.id}
                                                 onClick={() => onNavigate(item.id)}
-                                                className="group flex flex-col bg-white border border-slate-200 rounded-2xl p-6 hover:border-red-600/30 hover:shadow-xl hover:shadow-red-600/5 transition-all text-left relative overflow-hidden"
+                                                className="group flex flex-col bg-fire-panel border border-gray-800 rounded-2xl p-6 hover:border-fire-red/50 hover:shadow-xl hover:shadow-fire-red/10 transition-all text-left relative overflow-hidden file-card"
                                             >
                                                 <div className="flex justify-between items-start mb-4">
-                                                    <div className={`p-3 rounded-xl ${item.type === 'pdf' || item.type === 'html' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'} transition-colors group-hover:scale-110 duration-300`}>
+                                                    <div className={`p-3 rounded-xl ${item.type === 'pdf' || item.type === 'html' ? 'accent-bg' : 'bg-gray-700 text-blue-400'} transition-colors group-hover:scale-110 duration-300`}>
                                                         <item.icon size={24} />
                                                     </div>
-                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 group-hover:text-red-600 transition-colors">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-600 accent-text transition-colors">
                                                         {item.type.toUpperCase()}
                                                     </span>
                                                 </div>
                                                 
                                                 <div className="mb-6 flex-1">
-                                                    <h3 className="font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight mb-1">{item.name}</h3>
-                                                    <p className="text-xs text-slate-400 truncate">{item.fileName}</p>
+                                                    <h3 className="font-bold text-gray-200 group-hover:text-white transition-colors leading-tight mb-1" style={{color: 'var(--text-main)'}}>{item.name}</h3>
+                                                    <p className="text-xs text-gray-500 truncate" style={{color: 'var(--text-muted)'}}>{item.fileName}</p>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 group-hover:text-slate-900 transition-colors mt-auto">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 accent-text transition-colors mt-auto">
                                                     <span className="group-hover:underline">View Document</span>
                                                     <ArrowRight size={14} className="transform group-hover:translate-x-1 transition-transform" />
                                                 </div>
@@ -772,11 +977,17 @@
             const [activeTab, setActiveTab] = useState('dashboard'); 
             const [sidebarOpen, setSidebarOpen] = useState(true);
             const [sidebarSearch, setSidebarSearch] = useState('');
+            const [currentTheme, setCurrentTheme] = useState('theme-1');
             
             const [expandedCategories, setExpandedCategories] = useState({
                 'Officer Clipboard': true,
                 'EMS': true
             });
+
+            // Effect to update body class when theme changes
+            useEffect(() => {
+                document.body.className = `${currentTheme} transition-colors duration-300`;
+            }, [currentTheme]);
 
             // Complete mapping of all files provided by the user
             const navigation = useMemo(() => [
@@ -916,14 +1127,21 @@
                 return <div className="p-10 text-center text-slate-400">File not found.</div>;
             };
 
+            const themes = [
+                { id: 'theme-1', name: 'Tactical', color: '#111111' },
+                { id: 'theme-2', name: 'Clean', color: '#1e3a8a' },
+                { id: 'theme-3', name: 'Red Line', color: '#b91c1c' },
+                { id: 'theme-4', name: 'Gold', color: '#d97706' }
+            ];
+
             return (
-                <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
+                <div className="min-h-screen bg-fire-dark flex font-sans text-gray-100 theme-container transition-colors duration-300">
                     {/* Sidebar Navigation */}
                     <aside className={`
                         ${sidebarOpen ? 'w-80' : 'w-20'} 
-                        bg-slate-950 text-white flex-shrink-0 print:hidden fixed md:sticky top-0 h-screen z-50 flex flex-col transition-all duration-300 shadow-2xl
+                        app-sidebar bg-black text-white flex-shrink-0 print:hidden fixed md:sticky top-0 h-screen z-50 flex flex-col transition-all duration-300 shadow-2xl border-r border-gray-800
                     `}>
-                        <div className="p-6 flex items-center justify-between border-b border-white/5 h-24">
+                        <div className="p-6 flex items-center justify-between border-b border-gray-800 h-24 sidebar-divider">
                             <div className="flex items-center gap-3 overflow-hidden">
                                 <img 
                                     src="./Screenshot%202025-12-10%20100334.png" 
@@ -932,12 +1150,12 @@
                                 />
                                 {sidebarOpen && (
                                     <div className="animate-in fade-in duration-300">
-                                        <span className="font-black text-lg tracking-tighter block leading-none">PHFR</span>
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Officer Suite</span>
+                                        <span className="font-black text-lg tracking-tighter block leading-none sidebar-text-main">PHFR</span>
+                                        <span className="text-[10px] font-bold accent-text uppercase tracking-widest">Officer Suite</span>
                                     </div>
                                 )}
                             </div>
-                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-white/5 rounded-xl transition-all text-slate-400 hover:text-white">
+                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-800 rounded-xl transition-all sidebar-text-muted hover:text-white">
                                 {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
                             </button>
                         </div>
@@ -948,8 +1166,8 @@
                                 className={`
                                     w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group mb-2
                                     ${activeTab === 'dashboard' 
-                                        ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' 
-                                        : 'text-slate-500 hover:bg-white/5 hover:text-white'}
+                                        ? 'accent-bg shadow-xl shadow-red-900/40' 
+                                        : 'sidebar-text-muted hover:bg-gray-900 hover:text-white'}
                                     ${!sidebarOpen ? 'justify-center' : ''}
                                 `}
                             >
@@ -960,13 +1178,14 @@
                             {sidebarOpen && (
                                 <div className="px-1 mb-4">
                                     <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 sidebar-text-muted" size={14} />
                                         <input 
                                             type="text" 
                                             placeholder="Quick find..." 
-                                            className="w-full bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg pl-9 pr-3 py-2.5 focus:outline-none focus:border-red-600 transition-colors placeholder:text-slate-600"
+                                            className="w-full bg-gray-900 border border-gray-800 text-gray-300 text-xs rounded-lg pl-9 pr-3 py-2.5 focus:outline-none accent-border transition-colors placeholder:text-gray-600 form-input"
                                             value={sidebarSearch}
                                             onChange={(e) => setSidebarSearch(e.target.value)}
+                                            style={{backgroundColor: 'var(--input-bg)', color: 'var(--text-main)', borderColor: 'var(--border-color)'}}
                                         />
                                     </div>
                                 </div>
@@ -988,15 +1207,15 @@
                                             onClick={() => sidebarOpen && toggleCategory(cat)}
                                             className={`
                                                 w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors group
-                                                ${sidebarOpen ? 'hover:bg-white/5' : 'justify-center'}
+                                                ${sidebarOpen ? 'hover:bg-gray-900' : 'justify-center'}
                                             `}
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-red-600 transition-all"></div>
-                                                {sidebarOpen && <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-slate-300">{cat}</span>}
+                                                <div className="w-1.5 h-1.5 rounded-full bg-gray-600 accent-bg transition-all"></div>
+                                                {sidebarOpen && <span className="text-[10px] font-black uppercase tracking-[0.2em] sidebar-text-muted group-hover:text-gray-300">{cat}</span>}
                                             </div>
                                             {sidebarOpen && (
-                                                isExpanded ? <ChevronDown size={14} className="text-slate-600" /> : <ChevronRight size={14} className="text-slate-600" />
+                                                isExpanded ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />
                                             )}
                                         </button>
 
@@ -1009,13 +1228,13 @@
                                                         className={`
                                                             w-full flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all duration-300 group/item
                                                             ${activeTab === item.id 
-                                                                ? 'bg-white/10 text-red-500 font-bold border-l-4 border-red-600' 
-                                                                : 'text-slate-500 hover:text-white'}
+                                                                ? 'bg-gray-800 accent-text font-bold border-l-4 accent-border' 
+                                                                : 'sidebar-text-muted hover:text-white hover:bg-gray-900'}
                                                             ${!sidebarOpen ? 'justify-center' : ''}
                                                         `}
                                                         title={!sidebarOpen ? item.name : ''}
                                                     >
-                                                        <item.icon size={16} className={`flex-shrink-0 ${activeTab === item.id ? 'text-red-500' : ''}`} />
+                                                        <item.icon size={16} className={`flex-shrink-0 ${activeTab === item.id ? 'accent-text' : ''}`} />
                                                         {sidebarOpen && <span className="text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>}
                                                     </button>
                                                 ))}
@@ -1026,12 +1245,27 @@
                             })}
                         </nav>
                         
-                        <div className="p-6 border-t border-white/5 flex flex-col gap-4">
+                        <div className="p-4 border-t border-gray-800 sidebar-divider">
+                            {sidebarOpen && <p className="text-[10px] uppercase font-bold sidebar-text-muted mb-3 text-center">Interface Theme</p>}
+                            <div className={`flex ${sidebarOpen ? 'justify-between' : 'flex-col gap-2 items-center'}`}>
+                                {themes.map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setCurrentTheme(t.id)}
+                                        className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${currentTheme === t.id ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                        style={{ backgroundColor: t.color }}
+                                        title={t.name}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-800 sidebar-divider flex flex-col gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-red-500">JD</div>
+                                <div className="w-8 h-8 rounded-full accent-bg flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-900/50">GP</div>
                                 {sidebarOpen && (
-                                    <div className="text-[10px] uppercase font-bold text-slate-400">
-                                        Shift Officer <br /> <span className="text-white">Logged In</span>
+                                    <div className="text-[10px] uppercase font-bold sidebar-text-muted">
+                                        Created BY <br /> <span className="sidebar-text-main">Gianluca Petrone</span>
                                     </div>
                                 )}
                             </div>
@@ -1041,13 +1275,13 @@
                     {/* Main Content Area */}
                     <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                         {/* Top Bar */}
-                        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 p-6 flex items-center justify-between print:hidden flex-shrink-0">
+                        <header className="app-header bg-fire-panel/90 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 p-6 flex items-center justify-between print:hidden flex-shrink-0">
                             <div className="flex items-center gap-4">
-                                <h2 className="font-black text-xl text-slate-900 tracking-tight">
+                                <h2 className="font-black text-xl tracking-tight" style={{color: 'var(--text-main)'}}>
                                     {activeTab === 'dashboard' ? 'Station Dashboard' : activeItem?.name}
                                 </h2>
                                 {activeTab !== 'dashboard' && (
-                                    <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                    <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-1 rounded bg-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-wide border border-gray-700">
                                         <Eye size={12} /> View Mode
                                     </span>
                                 )}
@@ -1056,8 +1290,9 @@
                             <div className="flex gap-3">
                                 <button 
                                     onClick={() => setActiveTab('dashboard')}
-                                    className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white border hover:bg-slate-50 text-slate-600 shadow-sm'}`}
+                                    className={`px-3 py-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' : 'bg-fire-panel border border-gray-600 hover:bg-gray-800 text-white shadow-sm'}`}
                                     disabled={activeTab === 'dashboard'}
+                                    style={activeTab !== 'dashboard' ? {backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-color)', color: 'var(--text-main)'} : {}}
                                 >
                                     <LayoutDashboard size={18} />
                                 </button>
@@ -1065,7 +1300,7 @@
                         </header>
 
                         {/* Content Viewer */}
-                        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50">
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8" style={{background: 'var(--bg-body)'}}>
                             {renderContent()}
                         </div>
                     </main>
