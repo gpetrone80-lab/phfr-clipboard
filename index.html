@@ -162,6 +162,16 @@
             border: none !important;
             border-bottom: 1px solid black !important;
         }
+        .paper-view .form-input:focus {
+            background-color: white !important;
+            box-shadow: none !important;
+            border-bottom: 2px solid #D50000 !important;
+        }
+        
+        .pdf-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .pdf-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .pdf-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .pdf-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="theme-1">
@@ -176,7 +186,6 @@
             </svg>
         );
 
-        // All icons defined here (ClipboardCheck, Flame, etc.) - Kept same as before
         const ClipboardCheck = (props) => <IconBase {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></IconBase>;
         const Flame = (props) => <IconBase {...props}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></IconBase>;
         const MapIcon = (props) => <IconBase {...props}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" x2="8" y1="2" y2="18"/><line x1="16" x2="16" y1="6" y2="22"/></IconBase>;
@@ -205,6 +214,11 @@
         const Edit = (props) => <IconBase {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></IconBase>;
         const Sun = (props) => <IconBase {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconBase>;
         const Palette = (props) => <IconBase {...props}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></IconBase>;
+        const LinkIcon = (props) => <IconBase {...props}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></IconBase>;
+        const CalendarIcon = (props) => <IconBase {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>;
+        const LockIcon = (props) => <IconBase {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></IconBase>;
+        const ExternalLink = (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></IconBase>;
+        const Briefcase = (props) => <IconBase {...props}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></IconBase>;
 
         // --- Reusable Form Components ---
         const PrintInput = ({ className = "", ...props }) => (
@@ -751,6 +765,108 @@
             </div>
         );
 
+        const InfectiousExposureForm = () => (
+            <div className="bg-white p-8 max-w-4xl mx-auto print:p-0 print:max-w-none font-sans text-black print-container shadow-lg rounded-xl print:shadow-none mb-10 paper-view text-xs">
+                <div className="flex justify-between items-center border-b-2 border-black pb-4 mb-6">
+                    <div>
+                        <h1 className="text-xl font-bold uppercase">PALM HARBOR FIRE RESCUE</h1>
+                        <h2 className="text-lg font-bold text-red-700 print:text-black">Infectious Exposure Form</h2>
+                    </div>
+                    <div className="text-right font-bold uppercase">
+                        FLORIDA<br/>Palm Harbor Fire Rescue
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="space-y-2">
+                        <div className="flex gap-2"><span>Exposed member's name:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Employee number:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Incident Number:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Incident Location:</span><PrintInput className="flex-1" /></div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex gap-2"><span>Shift/Assignment:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Rank:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Date of exposure:</span><PrintInput type="date" className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Time of exposure:</span><PrintInput type="time" className="flex-1" /></div>
+                    </div>
+                </div>
+
+                <div className="border border-black p-3 mb-6">
+                    <h3 className="font-bold border-b border-black mb-2 uppercase">Source Patient Information</h3>
+                    <div className="grid grid-cols-3 gap-4 mb-2">
+                        <div className="flex gap-2"><span>Name:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Sex:</span><PrintInput className="w-12" /></div>
+                        <div className="flex gap-2"><span>Age:</span><PrintInput className="w-12" /></div>
+                    </div>
+                    <div className="flex gap-2 mb-2"><span>Address:</span><PrintInput className="flex-1" /></div>
+                    <div className="flex gap-4 items-center mb-2">
+                        <span>Was source blood collected on the scene?</span>
+                        <label className="flex gap-1"><input type="radio" name="blood_collected" /> Yes</label>
+                        <label className="flex gap-1"><input type="radio" name="blood_collected" /> No</label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex gap-2"><span>Transported to:</span><PrintInput className="flex-1" /></div>
+                        <div className="flex gap-2"><span>Transported by:</span><PrintInput className="flex-1" /></div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <span className="font-bold block mb-1">What were you exposed to? (Check all that apply)</span>
+                        <div className="flex flex-wrap gap-4">
+                            {['Blood', 'Tears', 'Feces', 'Urine', 'Saliva', 'Vomitus', 'Sputum'].map(type => (
+                                <label key={type} className="flex items-center gap-1"><input type="checkbox" /> {type}</label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 items-center">
+                        <span>If substance is other than blood, was blood visible in it?</span>
+                        <label className="flex gap-1"><input type="radio" name="blood_visible" /> Yes</label>
+                        <label className="flex gap-1"><input type="radio" name="blood_visible" /> No</label>
+                    </div>
+
+                    <div>
+                        <span className="font-bold block mb-1">What part(s) of your body became exposed? Be specific:</span>
+                        <PrintInput />
+                    </div>
+
+                    <div>
+                        <span className="font-bold block mb-1">Did you have any open cuts, sores, or rashes that became exposed? Be specific:</span>
+                        <PrintInput />
+                    </div>
+
+                    <div>
+                        <span className="font-bold block mb-1">How did exposure occur? Be specific:</span>
+                        <PrintTextArea className="min-h-[60px]" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex gap-4 items-center">
+                            <span>Was PPE being worn?</span>
+                            <label className="flex gap-1"><input type="radio" name="ppe" /> Yes</label>
+                            <label className="flex gap-1"><input type="radio" name="ppe" /> No</label>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                            <span>Did you seek medical attention?</span>
+                            <label className="flex gap-1"><input type="radio" name="med" /> Yes</label>
+                            <label className="flex gap-1"><input type="radio" name="med" /> No</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mt-8 border-t-2 border-black pt-4">
+                    <div className="flex gap-2 items-end"><span>Member's Signature:</span><PrintInput /></div>
+                    <div className="flex gap-2 items-end"><span>Date:</span><PrintInput type="date" /></div>
+                    <div className="flex gap-2 items-end"><span>Supervisor's Signature:</span><PrintInput /></div>
+                    <div className="flex gap-2 items-end"><span>Date:</span><PrintInput type="date" /></div>
+                    <div className="flex gap-2 items-end"><span>ICO's Signature:</span><PrintInput /></div>
+                    <div className="flex gap-2 items-end"><span>Date:</span><PrintInput type="date" /></div>
+                </div>
+            </div>
+        );
+
         // --- File Viewer/Editor Controller ---
         const FileController = ({ file }) => {
             const isPdf = file.type === 'pdf';
@@ -767,7 +883,8 @@
                 'fire-watch-log': FireWatchLogForm,
                 'smoke-form': SmokeAlarmForm,
                 'co-report': CarbonMonoxideReportForm,
-                'ems-incident': EMSIncidentReportForm
+                'ems-incident': EMSIncidentReportForm,
+                'infection-form': InfectiousExposureForm
             };
 
             const DigitalTwinComponent = digitalTwins[file.id];
@@ -883,11 +1000,48 @@
             );
         };
 
+        // --- Link Dashboard Component ---
+        const LinksDashboard = () => {
+            const links = [
+                { name: "Imagetrend Blue", url: "https://pinellascounty.imagetrendelite.com/Elite/Organizationpinellascounty/RunForm/Login", color: "bg-blue-600", icon: FileText },
+                { name: "Imagetrend Yellow", url: "https://pinellascounty.imagetrendelite.com/Elite/Organizationpinellascounty/?logout=1", color: "bg-yellow-500", icon: FileText },
+                { name: "Pstrax", url: "https://app1.pstrax.com/login.php?username=lpetrone%40palmharborfd.com", color: "bg-green-600", icon: ClipboardCheck },
+                { name: "PHFR Login", url: "https://login.palmharborfd.com/", color: "bg-red-600", icon: LockIcon },
+                { name: "Department Calendar", url: "https://outlook.office365.com/calendar/published/19aade923b7344d2a321b8ba62ae15b3@palmharborfd.com/73c49905a6fd44739ced72ca58399a0e3049452539445466519/calendar.html", color: "bg-purple-600", icon: CalendarIcon },
+                { name: "Vector Solutions", url: "https://app.targetsolutions.com/auth/index.cfm?action=login.showlogin&customerid=16061&customerpath=palmharborfire", color: "bg-teal-600", icon: Briefcase },
+            ];
+
+            return (
+                <div className="p-8 max-w-5xl mx-auto h-full overflow-y-auto">
+                    <h2 className="text-2xl font-black mb-8 text-white flex items-center gap-3" style={{color: 'var(--text-main)'}}>
+                        <ExternalLink className="accent-text" /> External Resources
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {links.map((link, i) => (
+                            <a 
+                                key={i} 
+                                href={link.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-4 p-6 rounded-xl shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl text-white font-bold text-lg ${link.color}`}
+                            >
+                                <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm">
+                                    <link.icon size={28} />
+                                </div>
+                                {link.name}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         // --- Command Dashboard ---
         const CommandDashboard = ({ onNavigate, navigation }) => {
             const [query, setQuery] = useState('');
             
             const groups = navigation.reduce((acc, curr) => {
+                if (curr.id === 'ems-links') return acc; // Don't show links in the document grid
                 if (!acc[curr.category]) acc[curr.category] = [];
                 acc[curr.category].push(curr);
                 return acc;
@@ -1105,6 +1259,14 @@
                     type: 'docx', 
                     icon: HeartPulse, 
                     category: 'EMS' 
+                },
+                { 
+                    id: 'ems-links', 
+                    name: 'Links', 
+                    fileName: '', 
+                    type: 'link', 
+                    icon: ExternalLink, 
+                    category: 'EMS' 
                 }
             ], []);
 
@@ -1120,6 +1282,9 @@
             const renderContent = () => {
                 if (activeTab === 'dashboard') {
                     return <CommandDashboard onNavigate={setActiveTab} navigation={navigation} />;
+                }
+                if (activeTab === 'ems-links') {
+                    return <LinksDashboard />;
                 }
                 if (activeItem) {
                     return <FileController file={activeItem} />;
@@ -1262,7 +1427,7 @@
 
                         <div className="p-6 border-t border-gray-800 sidebar-divider flex flex-col gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full accent-bg flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-900/50">GP</div>
+                                <div className="w-8 h-8 rounded-full accent-bg flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-900/50">JD</div>
                                 {sidebarOpen && (
                                     <div className="text-[10px] uppercase font-bold sidebar-text-muted">
                                         Created BY <br /> <span className="sidebar-text-main">Gianluca Petrone</span>
